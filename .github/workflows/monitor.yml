@@ -1,0 +1,39 @@
+name: Continuous Steam Tracker
+
+concurrency:
+  group: steam-tracker-group
+  cancel-in-progress: true
+
+on:
+  # Allows you to click a button to turn the tracker on manually
+  workflow_dispatch:
+
+jobs:
+  run-monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360 # GitHub actions automatically shut down after 6 hours max per run
+
+    steps:
+    - name: Checkout Repository Code
+      uses: actions/checkout@v4
+
+    - name: Set up Cloud Python Environment
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Install Monitor Framework
+      run: |
+        python -m pip install --upgrade pip
+        pip install steam_monitor
+
+    - name: Launch Live Tracking
+      env:
+        # Securely injects your hidden API Key token into the tracking process
+        STEAM_API_KEY: ${{ secrets.STEAM_API_KEY }} 
+        SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+        STEAM_TARGET_USERS: ${{ secrets.STEAM_TARGET_USERS }}
+        SMTP_USER: ${{ secrets.SMTP_USER }}
+        RECEIVER_EMAIL: ${{ secrets.RECEIVER_EMAIL }}
+      run: |
+        python run_monitor.py
